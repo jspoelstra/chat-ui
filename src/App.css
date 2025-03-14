@@ -1,0 +1,189 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.app-header h1 {
+  margin: 0;
+  margin-right: auto;
+}
+
+.connection-status {
+  margin-right: 1rem;
+}
+
+.main-content {
+  display: flex;
+  height: calc(100vh - 70px);
+}
+
+.chat-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e2e8f0;
+  color: #333333; /* Dark gray text color */
+}
+
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  color: #333333; /* Dark gray text color */
+}
+
+.message {
+  margin-bottom: 1rem;
+  color: #333333; /* Dark gray text color */
+}
+
+.user-message {
+  background-color: #f0f4f8;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-left: 2rem;
+  color: #333333; /* Dark gray text color */
+}
+
+.bot-message {
+  background-color: #edf2f7;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-right: 2rem;
+  color: #333333; /* Dark gray text color */
+}
+
+.bot-progress {
+  background-color: #f7fafc;
+  padding: 0.5rem;
+  margin: 0.5rem 2rem 0.5rem 2rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid #4299e1;
+}
+
+.message-sender {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.message-thoughts {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #ebf8ff;
+  border-radius: 0.25rem;
+  font-style: italic;
+}
+
+.message-error {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #fed7d7;
+  border-radius: 0.25rem;
+  color: #c53030;
+}
+
+.message-input-form {
+  display: flex;
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  resize: none;
+  min-height: 60px;
+}
+
+.send-button {
+  margin-left: 0.5rem;
+  padding: 0 1rem;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.send-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.retry-button {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  background-color: #4299e1;
+  color: white;
+}
+
+.retry-button:hover {
+  background-color: #3182ce;
+}
+
+.debug-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #f7fafc;
+  color: #2d3748; /* Darker text color for better contrast */
+}
+
+.tool-calls {
+  margin-top: 1rem;
+}
+
+.tool-call {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.tool-input, .tool-output {
+  margin-top: 0.5rem;
+}
+
+.tool-input pre, .tool-output pre {
+  background-color: #edf2f7;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+}
+
+.settings-panel {
+  padding: 1rem;
+  background-color: #edf2f7;
+  border-bottom: 1px solid #e2e8f0;
+  color: #2d3748; /* Darker text color for better contrast */
+}
+
+.setting {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.setting label {
+  margin-bottom: 0.25rem;
+  font-weight: bold;
+}
+
+.setting input {
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+}
