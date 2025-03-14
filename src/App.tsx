@@ -8,7 +8,9 @@ import { BotSystemMsg, BotMessageTypes, BotMsg, BotRequestMsg } from './types/pr
 import './App.css';
 
 function App() {
-  const [wsUri, setWsUri] = useState('ws://localhost:501/chat');
+  // Changed from ws://localhost:501/chat to ws://localhost:501
+  // The hook will append the correct endpoint (/chat or /system)
+  const [wsUri, setWsUri] = useState('ws://localhost:501');
   const [userId, setUserId] = useState<string | null>("anonymous");
   const [showSettings, setShowSettings] = useState(false);
   const [reconnectTrigger, setReconnectTrigger] = useState(0);
@@ -52,6 +54,7 @@ function App() {
     };
     
     // Send system message and clear messages
+    // The hook will detect that this is a system message and use the /system endpoint
     sendMessage(
       JSON.stringify(systemMsg), 
       userId, 

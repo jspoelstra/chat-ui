@@ -1,23 +1,36 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { BotMsg, BotMessageTypes, BotRequestMsg } from '../types/protocol';
+import { BotMsg, BotMessageTypes, BotRequestMsg, BotSystemMsg } from '../types/protocol';
 
-export function useWebSocket(uri: string, reconnectTrigger = 0) {
+export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const isAttemptingConnection = useRef(false);
   
+  // Extract domain and port from baseUri
+  const getBaseUrl = useCallback(() => {
+    try {
+      // Remove path part if present
+      const url = new URL(baseUri);
+      return `${url.protocol}//${url.host}`;
+    } catch (e) {
+      console.error('Invalid URI:', baseUri);
+      return baseUri; // Return as is if invalid
+    }
+  }, [baseUri]);
+  
   // Check if we can connect to the WebSocket server
   useEffect(() => {
-    if (!uri) return;
+    if (!baseUri) return;
     
     const checkConnection = async () => {
       if (isAttemptingConnection.current) return;
       
       isAttemptingConnection.current = true;
-      console.log(`Checking connection to WebSocket at ${uri}`);
+      const chatUri = `${getBaseUrl()}/chat`;
+      console.log(`Checking connection to WebSocket at ${chatUri}`);
       
       try {
-        const socket = new WebSocket(uri);
+        const socket = new WebSocket(chatUri);
         
         // Set up event handlers
         socket.onopen = () => {
@@ -46,7 +59,7 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
     return () => {
       isAttemptingConnection.current = false;
     };
-  }, [uri, reconnectTrigger]);
+  }, [baseUri, reconnectTrigger, getBaseUrl]);
 
   // Send message function - creates a new connection for each message
   const sendMessage = useCallback((
@@ -55,33 +68,58 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
     onReceiveMessage: (message: BotMsg) => void,
     onSendMessage?: (request: BotRequestMsg) => void
   ) => {
-    if (!uri) return;
+    if (!baseUri) return;
     
-    console.log(`Creating new connection to send message: ${message}`);
+    // Determine message type and endpoint
+    let messageObj: BotMsg;
+    let endpoint: string;
     
-    // Create the request object
-    const botRequest: BotRequestMsg = {
-      type: BotMessageTypes.REQUEST,
-      data: {
-        user_id: userId,
-        human: message
+    try {
+      // Check if the message is a JSON string (system message)
+      const parsedMessage = JSON.parse(message);
+      if (parsedMessage.type === BotMessageTypes.SYSTEM) {
+        messageObj = parsedMessage as BotSystemMsg;
+        endpoint = '/system';
+      } else {
+        // If JSON but not a system message, treat as chat
+        messageObj = {
+          type: BotMessageTypes.REQUEST,
+          data: {
+            user_id: userId,
+            human: message
+          }
+        } as BotRequestMsg;
+        endpoint = '/chat';
       }
-    };
+    } catch (e) {
+      // Not JSON, treat as a normal chat message
+      messageObj = {
+        type: BotMessageTypes.REQUEST,
+        data: {
+          user_id: userId,
+          human: message
+        }
+      } as BotRequestMsg;
+      endpoint = '/chat';
+    }
+    
+    console.log(`Creating new connection to send message to ${endpoint}: ${message}`);
     
     // Call the callback to let parent component handle adding this message
-    if (onSendMessage) {
-      onSendMessage(botRequest);
+    if (onSendMessage && messageObj.type === BotMessageTypes.REQUEST) {
+      onSendMessage(messageObj as BotRequestMsg);
     }
     
     // Create a new WebSocket connection for this message
+    const uri = `${getBaseUrl()}${endpoint}`;
     const socket = new WebSocket(uri);
     socketRef.current = socket;
     
     socket.onopen = () => {
-      console.log('WebSocket opened for sending message');
+      console.log(`WebSocket opened for sending message to ${endpoint}`);
       // Send the message as soon as the connection opens
-      socket.send(JSON.stringify(botRequest));
-      console.log('Sent message:', botRequest);
+      socket.send(JSON.stringify(messageObj));
+      console.log('Sent message:', messageObj);
     };
     
     socket.onmessage = (event) => {
@@ -90,7 +128,8 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
       onReceiveMessage(message);
       
       // If this is a final response, close the connection
-      if (message.type === BotMessageTypes.RESPONSE) {
+      if (message.type === BotMessageTypes.RESPONSE || 
+          message.type === BotMessageTypes.SYSRESPONSE) {
         socket.close();
       }
     };
@@ -115,7 +154,7 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
     
     // Clear timeout if component unmounts
     return () => clearTimeout(timeout);
-  }, [uri]);
+  }, [baseUri, getBaseUrl]);
 
   return { isConnected, sendMessage };
 }
