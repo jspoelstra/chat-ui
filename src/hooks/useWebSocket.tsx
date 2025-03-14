@@ -3,7 +3,6 @@ import { BotMsg, BotMessageTypes, BotRequestMsg } from '../types/protocol';
 
 export function useWebSocket(uri: string, reconnectTrigger = 0) {
   const [isConnected, setIsConnected] = useState(false);
-  const [messages, setMessages] = useState<BotMsg[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
   const isAttemptingConnection = useRef(false);
   
@@ -50,12 +49,17 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
   }, [uri, reconnectTrigger]);
 
   // Send message function - creates a new connection for each message
-  const sendMessage = useCallback((message: string, userId: string | null) => {
+  const sendMessage = useCallback((
+    message: string, 
+    userId: string | null, 
+    onReceiveMessage: (message: BotMsg) => void,
+    onSendMessage?: (request: BotRequestMsg) => void
+  ) => {
     if (!uri) return;
     
     console.log(`Creating new connection to send message: ${message}`);
     
-    // Add the user message to local state immediately
+    // Create the request object
     const botRequest: BotRequestMsg = {
       type: BotMessageTypes.REQUEST,
       data: {
@@ -63,7 +67,11 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
         human: message
       }
     };
-    setMessages(prev => [...prev, botRequest]);
+    
+    // Call the callback to let parent component handle adding this message
+    if (onSendMessage) {
+      onSendMessage(botRequest);
+    }
     
     // Create a new WebSocket connection for this message
     const socket = new WebSocket(uri);
@@ -73,12 +81,13 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
       console.log('WebSocket opened for sending message');
       // Send the message as soon as the connection opens
       socket.send(JSON.stringify(botRequest));
+      console.log('Sent message:', botRequest);
     };
     
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data) as BotMsg;
       console.log('Received message:', message);
-      setMessages(prev => [...prev, message]);
+      onReceiveMessage(message);
       
       // If this is a final response, close the connection
       if (message.type === BotMessageTypes.RESPONSE) {
@@ -108,5 +117,5 @@ export function useWebSocket(uri: string, reconnectTrigger = 0) {
     return () => clearTimeout(timeout);
   }, [uri]);
 
-  return { isConnected, messages, sendMessage };
+  return { isConnected, sendMessage };
 }

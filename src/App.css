@@ -4,18 +4,21 @@
   height: 100vh;
   max-width: 1200px;
   margin: 0 auto;
+  overflow: hidden; /* Prevent scrolling at container level */
 }
 
 .app-header {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 0.5rem 1rem; /* Reduced padding */
   border-bottom: 1px solid #e2e8f0;
+  min-height: 50px; /* Fixed header height */
 }
 
 .app-header h1 {
   margin: 0;
   margin-right: auto;
+  font-size: 1.5rem; /* Smaller font size */
 }
 
 .connection-status {
@@ -24,7 +27,8 @@
 
 .main-content {
   display: flex;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 50px); /* Calculate based on fixed header height */
+  overflow: hidden; /* Hide overflow at this level */
 }
 
 .chat-section {
@@ -33,11 +37,13 @@
   flex-direction: column;
   border-right: 1px solid #e2e8f0;
   color: #333333; /* Dark gray text color */
+  overflow: hidden; /* Prevent overflow */
+  min-width: 800px; /* Set minimum width for chat section */
 }
 
 .chat-container {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* Allow scrolling in chat container */
   padding: 1rem;
   color: #333333; /* Dark gray text color */
 }
@@ -94,8 +100,9 @@
 
 .message-input-form {
   display: flex;
-  padding: 1rem;
+  padding: 0.75rem; /* Reduced padding */
   border-top: 1px solid #e2e8f0;
+  min-height: 60px; /* Fixed height */
 }
 
 .message-input {
@@ -104,7 +111,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 0.25rem;
   resize: none;
-  min-height: 60px;
+  height: 60px; /* Fixed height */
 }
 
 .send-button {
@@ -135,10 +142,11 @@
 
 .debug-panel {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* Allow scrolling in debug panel */
   padding: 1rem;
   background-color: #f7fafc;
   color: #2d3748; /* Darker text color for better contrast */
+  min-width: 400px; /* Set minimum width for debug panel */
 }
 
 .tool-calls {
@@ -165,14 +173,14 @@
 }
 
 .settings-panel {
-  padding: 1rem;
+  padding: 0.75rem; /* Reduced padding */
   background-color: #edf2f7;
   border-bottom: 1px solid #e2e8f0;
   color: #2d3748; /* Darker text color for better contrast */
 }
 
 .setting {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem; /* Reduced margin */
   display: flex;
   flex-direction: column;
 }
