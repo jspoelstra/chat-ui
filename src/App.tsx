@@ -4,6 +4,7 @@ import ChatContainer from './components/ChatContainer';
 import MessageInput from './components/MessageInput';
 import DebugPanel from './components/DebugPanel';
 import SettingsPanel from './components/SettingsPanel';
+import { BotSystemMsg, BotMessageTypes, BotMsg, BotRequestMsg } from './types/protocol';
 import './App.css';
 
 function App() {
@@ -12,22 +13,53 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [reconnectTrigger, setReconnectTrigger] = useState(0);
   const [isSending, setIsSending] = useState(false);
-  
-  const { isConnected, messages, sendMessage } = useWebSocket(wsUri, reconnectTrigger);
+  const [messages, setMessages] = useState<BotMsg[]>([]);
+  const { isConnected, sendMessage } = useWebSocket(wsUri, reconnectTrigger);
 
+  // Callback for when a message is received from the server
+  const handleReceiveMessage = useCallback((message: BotMsg) => {
+    setMessages(prev => [...prev, message]);
+  }, []);
+
+  // Callback for when a message is sent to add it to the UI
   const handleSendMessage = useCallback((message: string) => {
     setIsSending(true);
-    sendMessage(message, userId);
     
-    // Reset sending state after a short delay
-    // This gives visual feedback to the user
+    sendMessage(
+      message, 
+      userId, 
+      handleReceiveMessage, 
+      (request: BotRequestMsg) => {
+        setMessages(prev => [...prev, request]);
+      }
+    );
+    
     setTimeout(() => setIsSending(false), 1000);
-  }, [userId, sendMessage]);
+  }, [userId, sendMessage, handleReceiveMessage]);
 
   const handleRetryConnection = useCallback(() => {
-    // Increment the reconnect trigger to force a new connection check
     setReconnectTrigger(prev => prev + 1);
   }, []);
+
+  const handleNewConversation = useCallback(() => {
+    const systemMsg: BotSystemMsg = {
+      type: BotMessageTypes.SYSTEM,
+      data: {
+        user_id: userId,
+        cmd: 'end_conversation',
+        args: []
+      }
+    };
+    
+    // Send system message and clear messages
+    sendMessage(
+      JSON.stringify(systemMsg), 
+      userId, 
+      handleReceiveMessage
+    );
+    
+    setMessages([]);
+  }, [userId, sendMessage, handleReceiveMessage]);
 
   return (
     <div className="app-container">
@@ -48,6 +80,9 @@ function App() {
         <button onClick={() => setShowSettings(!showSettings)}>
           {showSettings ? 'Hide Settings' : 'Show Settings'}
         </button>
+        <button onClick={handleNewConversation} style={{ marginLeft: '10px' }}>
+          New Conversation
+        </button>
       </header>
 
       {showSettings && (
@@ -55,7 +90,6 @@ function App() {
           wsUri={wsUri} 
           setWsUri={(uri) => {
             setWsUri(uri);
-            // Force reconnection when URI is updated
             handleRetryConnection();
           }} 
           userId={userId} 
