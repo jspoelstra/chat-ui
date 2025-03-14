@@ -4,30 +4,65 @@ import ChatContainer from './components/ChatContainer';
 import MessageInput from './components/MessageInput';
 import DebugPanel from './components/DebugPanel';
 import SettingsPanel from './components/SettingsPanel';
+import { BotSystemMsg, BotMessageTypes, BotMsg, BotRequestMsg } from './types/protocol';
 import './App.css';
 
 function App() {
-  const [wsUri, setWsUri] = useState('ws://localhost:501/chat');
+  // Changed from ws://localhost:501/chat to ws://localhost:501
+  // The hook will append the correct endpoint (/chat or /system)
+  const [wsUri, setWsUri] = useState('ws://localhost:501');
   const [userId, setUserId] = useState<string | null>("anonymous");
   const [showSettings, setShowSettings] = useState(false);
   const [reconnectTrigger, setReconnectTrigger] = useState(0);
   const [isSending, setIsSending] = useState(false);
-  
-  const { isConnected, messages, sendMessage } = useWebSocket(wsUri, reconnectTrigger);
+  const [messages, setMessages] = useState<BotMsg[]>([]);
+  const { isConnected, sendMessage } = useWebSocket(wsUri, reconnectTrigger);
 
+  // Callback for when a message is received from the server
+  const handleReceiveMessage = useCallback((message: BotMsg) => {
+    setMessages(prev => [...prev, message]);
+  }, []);
+
+  // Callback for when a message is sent to add it to the UI
   const handleSendMessage = useCallback((message: string) => {
     setIsSending(true);
-    sendMessage(message, userId);
     
-    // Reset sending state after a short delay
-    // This gives visual feedback to the user
+    sendMessage(
+      message, 
+      userId, 
+      handleReceiveMessage, 
+      (request: BotRequestMsg) => {
+        setMessages(prev => [...prev, request]);
+      }
+    );
+    
     setTimeout(() => setIsSending(false), 1000);
-  }, [userId, sendMessage]);
+  }, [userId, sendMessage, handleReceiveMessage]);
 
   const handleRetryConnection = useCallback(() => {
-    // Increment the reconnect trigger to force a new connection check
     setReconnectTrigger(prev => prev + 1);
   }, []);
+
+  const handleNewConversation = useCallback(() => {
+    const systemMsg: BotSystemMsg = {
+      type: BotMessageTypes.SYSTEM,
+      data: {
+        user_id: userId,
+        cmd: 'end_conversation',
+        args: []
+      }
+    };
+    
+    // Send system message and clear messages
+    // The hook will detect that this is a system message and use the /system endpoint
+    sendMessage(
+      JSON.stringify(systemMsg), 
+      userId, 
+      handleReceiveMessage
+    );
+    
+    setMessages([]);
+  }, [userId, sendMessage, handleReceiveMessage]);
 
   return (
     <div className="app-container">
@@ -48,6 +83,9 @@ function App() {
         <button onClick={() => setShowSettings(!showSettings)}>
           {showSettings ? 'Hide Settings' : 'Show Settings'}
         </button>
+        <button onClick={handleNewConversation} style={{ marginLeft: '10px' }}>
+          New Conversation
+        </button>
       </header>
 
       {showSettings && (
@@ -55,7 +93,6 @@ function App() {
           wsUri={wsUri} 
           setWsUri={(uri) => {
             setWsUri(uri);
-            // Force reconnection when URI is updated
             handleRetryConnection();
           }} 
           userId={userId} 

@@ -11,6 +11,7 @@ function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
+      console.log('Sending message:', message);
       onSendMessage(message);
       setMessage('');
     }
