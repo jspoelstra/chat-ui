@@ -68,30 +68,39 @@
   overflow-y: auto; /* Allow scrolling in chat container */
   padding: 1rem;
   color: #333333; /* Dark gray text color */
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
   margin-bottom: 1rem;
   color: #333333; /* Dark gray text color */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .user-message {
-  background-color: #f0f4f8;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-right: 0;
-  margin-left: auto;
-  max-width: 80%; /* Limit the width to maintain readability */
-  color: #333333; /* Dark gray text color */
+  align-items: flex-end;
 }
 
 .bot-message {
-  background-color: #edf2f7;
+  align-items: flex-start;
+}
+
+.message-bubble {
   padding: 1rem;
   border-radius: 0.5rem;
-  margin-right: auto;
-  margin-left: 0;
   max-width: 80%; /* Limit the width to maintain readability */
+}
+
+.user-message .message-bubble {
+  background-color: #f0f4f8;
+  color: #333333; /* Dark gray text color */
+}
+
+.bot-message .message-bubble {
+  background-color: #edf2f7;
   color: #333333; /* Dark gray text color */
 }
 

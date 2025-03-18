@@ -11,29 +11,33 @@ function MessageDisplay({ message }: MessageDisplayProps) {
       case BotMessageTypes.REQUEST:
         return (
           <div className="user-message">
-            <div className="message-sender">You</div>
-            <div className="message-content">{message.data.human}</div>
+            <div className="message-bubble">
+              <div className="message-sender">You</div>
+              <div className="message-content">{message.data.human}</div>
+            </div>
           </div>
         );
       
       case BotMessageTypes.RESPONSE:
         return (
           <div className="bot-message">
-            <div className="message-sender">AI</div>
-            <div className="message-content">
-              <ReactMarkdown>{message.data.bot_text}</ReactMarkdown>
-            </div>
-            {message.data.bot_thoughts && (
-              <div className="message-thoughts">
-                <details>
-                  <summary>Thoughts</summary>
-                  <ReactMarkdown>{message.data.bot_thoughts}</ReactMarkdown>
-                </details>
+            <div className="message-bubble">
+              <div className="message-sender">AI</div>
+              <div className="message-content">
+                <ReactMarkdown>{message.data.bot_text}</ReactMarkdown>
               </div>
-            )}
-            {message.data.error && (
-              <div className="message-error">Error: {message.data.error_message}</div>
-            )}
+              {message.data.bot_thoughts && (
+                <div className="message-thoughts">
+                  <details>
+                    <summary>Thoughts</summary>
+                    <ReactMarkdown>{message.data.bot_thoughts}</ReactMarkdown>
+                  </details>
+                </div>
+              )}
+              {message.data.error && (
+                <div className="message-error">Error: {message.data.error_message}</div>
+              )}
+            </div>
           </div>
         );
       
