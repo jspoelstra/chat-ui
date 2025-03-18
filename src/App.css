@@ -5,6 +5,7 @@
   max-width: 1200px;
   margin: 0 auto;
   overflow: hidden; /* Prevent scrolling at container level */
+  background-color: #ffffff; /* Brighter background color */
 }
 
 .app-header {
@@ -13,22 +14,42 @@
   padding: 0.5rem 1rem; /* Reduced padding */
   border-bottom: 1px solid #e2e8f0;
   min-height: 50px; /* Fixed header height */
+  background-color: #f8fafc; /* Light background for header */
 }
 
 .app-header h1 {
   margin: 0;
   margin-right: auto;
   font-size: 1.5rem; /* Smaller font size */
+  color: #1a202c; /* Added dark color for title text to ensure visibility */
 }
 
 .connection-status {
   margin-right: 1rem;
 }
 
+/* New class for header buttons */
+.header-button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.header-button:hover {
+  background-color: #3182ce;
+}
+
 .main-content {
   display: flex;
   height: calc(100vh - 50px); /* Calculate based on fixed header height */
   overflow: hidden; /* Hide overflow at this level */
+  background-color: #ffffff; /* Brighter background color */
 }
 
 .chat-section {
@@ -39,6 +60,7 @@
   color: #333333; /* Dark gray text color */
   overflow: hidden; /* Prevent overflow */
   min-width: 800px; /* Set minimum width for chat section */
+  background-color: #f8fafc; /* Light background for chat section */
 }
 
 .chat-container {
@@ -57,7 +79,9 @@
   background-color: #f0f4f8;
   padding: 1rem;
   border-radius: 0.5rem;
-  margin-left: 2rem;
+  margin-right: 0;
+  margin-left: auto;
+  max-width: 80%; /* Limit the width to maintain readability */
   color: #333333; /* Dark gray text color */
 }
 
@@ -65,7 +89,9 @@
   background-color: #edf2f7;
   padding: 1rem;
   border-radius: 0.5rem;
-  margin-right: 2rem;
+  margin-right: auto;
+  margin-left: 0;
+  max-width: 80%; /* Limit the width to maintain readability */
   color: #333333; /* Dark gray text color */
 }
 
@@ -103,6 +129,7 @@
   padding: 0.75rem; /* Reduced padding */
   border-top: 1px solid #e2e8f0;
   min-height: 60px; /* Fixed height */
+  background-color: #ffffff; /* Bright background for input form */
 }
 
 .message-input {
@@ -112,6 +139,9 @@
   border-radius: 0.25rem;
   resize: none;
   height: 60px; /* Fixed height */
+  font-size: 1.1rem; /* Larger font size */
+  line-height: 1.5;
+  background-color: #ffffff; /* White background */
 }
 
 .send-button {
@@ -122,6 +152,11 @@
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.send-button:hover {
+  background-color: #3182ce;
 }
 
 .send-button:disabled {
@@ -134,6 +169,9 @@
   padding: 0.2rem 0.5rem;
   background-color: #4299e1;
   color: white;
+  border: none;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
 }
 
 .retry-button:hover {
@@ -144,7 +182,7 @@
   flex: 1;
   overflow-y: auto; /* Allow scrolling in debug panel */
   padding: 1rem;
-  background-color: #f7fafc;
+  background-color: #f8fafc; /* Lighter background color */
   color: #2d3748; /* Darker text color for better contrast */
   min-width: 400px; /* Set minimum width for debug panel */
 }
