@@ -80,10 +80,16 @@ function App() {
             </button>
           )}
         </div>
-        <button onClick={() => setShowSettings(!showSettings)}>
+        <button 
+          onClick={() => setShowSettings(!showSettings)}
+          className="header-button"
+        >
           {showSettings ? 'Hide Settings' : 'Show Settings'}
         </button>
-        <button onClick={handleNewConversation} style={{ marginLeft: '10px' }}>
+        <button 
+          onClick={handleNewConversation} 
+          className="header-button"
+        >
           New Conversation
         </button>
       </header>
