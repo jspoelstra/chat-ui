@@ -69,7 +69,8 @@ function App() {
       <header className="app-header">
         <h1>Frisbee UI</h1>
         <div className="connection-status">
-          Status: {isConnected ? 'Connected' : 'Disconnected'}
+          <span className={`status-indicator ${isConnected ? 'status-connected' : 'status-disconnected'}`}></span>
+          <span>Status: {isConnected ? 'Connected' : 'Disconnected'}</span>
           {!isConnected && (
             <button 
               onClick={handleRetryConnection}
