@@ -26,6 +26,27 @@
 
 .connection-status {
   margin-right: 1rem;
+  color: #2d3748; /* Dark text color for visibility */
+  font-weight: 500; /* Medium font weight */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.status-connected {
+  background-color: #48bb78; /* Green for connected */
+}
+
+.status-disconnected {
+  background-color: #e53e3e; /* Red for disconnected */
 }
 
 /* New class for header buttons */
