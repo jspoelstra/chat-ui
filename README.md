@@ -13,6 +13,7 @@ A modern, TypeScript-based chat interface built with React and Vite that provide
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
+- [Credits](#credits)
 
 ## ✨ Features
 
@@ -268,3 +269,7 @@ npm test
 ## 📄 License
 
 This project is licensed under the terms of the license included in the repository.
+
+## 👥 Credits
+
+All code and documentation in this repository was developed by GitHub Copilot (running Claude 3.7) with guidance from Jacob Spoelstra. The project demonstrates the capabilities of AI-assisted development in creating production-ready applications with proper architecture, deployment configurations, and comprehensive documentation.
