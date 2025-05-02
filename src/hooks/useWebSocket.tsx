@@ -1,22 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BotMsg, BotMessageTypes, BotRequestMsg, BotSystemMsg } from '../types/protocol';
 
+// Helper function to construct WebSocket URIs
+function constructWebSocketUri(baseUri: string, endpoint: string): string {
+  try {
+    const url = new URL(baseUri);
+    // Ensure endpoint starts with a slash
+    const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${url.protocol}//${url.host}${formattedEndpoint}`;
+  } catch {
+    console.error('Invalid WebSocket URI:', baseUri);
+    // Fallback to simple string concatenation
+    const separator = baseUri.endsWith('/') ? '' : '/';
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    return `${baseUri}${separator}${cleanEndpoint}`;
+  }
+}
+
 export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const isAttemptingConnection = useRef(false);
-  
-  // Extract domain and port from baseUri
-  const getBaseUrl = useCallback(() => {
-    try {
-      // Remove path part if present
-      const url = new URL(baseUri);
-      return `${url.protocol}//${url.host}`;
-    } catch (e) {
-      console.error('Invalid URI:', baseUri);
-      return baseUri; // Return as is if invalid
-    }
-  }, [baseUri]);
   
   // Check if we can connect to the WebSocket server
   useEffect(() => {
@@ -26,7 +30,7 @@ export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
       if (isAttemptingConnection.current) return;
       
       isAttemptingConnection.current = true;
-      const chatUri = `${getBaseUrl()}/chat`;
+      const chatUri = constructWebSocketUri(baseUri, '/chat');
       console.log(`Checking connection to WebSocket at ${chatUri}`);
       
       try {
@@ -59,7 +63,7 @@ export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
     return () => {
       isAttemptingConnection.current = false;
     };
-  }, [baseUri, reconnectTrigger, getBaseUrl]);
+  }, [baseUri, reconnectTrigger]);
 
   // Send message function - creates a new connection for each message
   const sendMessage = useCallback((
@@ -91,7 +95,7 @@ export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
         } as BotRequestMsg;
         endpoint = '/chat';
       }
-    } catch (e) {
+    } catch {
       // Not JSON, treat as a normal chat message
       messageObj = {
         type: BotMessageTypes.REQUEST,
@@ -111,7 +115,7 @@ export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
     }
     
     // Create a new WebSocket connection for this message
-    const uri = `${getBaseUrl()}${endpoint}`;
+    const uri = constructWebSocketUri(baseUri, endpoint);
     const socket = new WebSocket(uri);
     socketRef.current = socket;
     
@@ -154,7 +158,7 @@ export function useWebSocket(baseUri: string, reconnectTrigger = 0) {
     
     // Clear timeout if component unmounts
     return () => clearTimeout(timeout);
-  }, [baseUri, getBaseUrl]);
+  }, [baseUri]);
 
   return { isConnected, sendMessage };
 }

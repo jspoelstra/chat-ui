@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BotMsg, BotMessageTypes } from '../types/protocol';
 import ReactMarkdown from 'react-markdown';
 import './DebugPanel.css';
@@ -8,6 +8,16 @@ interface DebugPanelProps {
 }
 
 const DebugPanel: React.FC<DebugPanelProps> = ({ messages }) => {
+  const debugEndRef = useRef<HTMLDivElement>(null);
+  
+  const scrollToBottom = () => {
+    debugEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+  
   return (
     <div className="debug-panel">
       <div className="debug-header">
@@ -49,6 +59,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ messages }) => {
           }
           return null; // Skip other message types
         })}
+        <div ref={debugEndRef} />
       </div>
     </div>
   );
