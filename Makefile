@@ -21,7 +21,7 @@ RESOURCE_GROUP := $(if $(call env_or_default,RESOURCE_GROUP),$(call env_or_defau
 CONTAINER_APP_ENV := $(if $(call env_or_default,CONTAINER_APP_ENV),$(call env_or_default,CONTAINER_APP_ENV),mycontainerenv)
 CONTAINER_APP_NAME := $(if $(call env_or_default,CONTAINER_APP_NAME),$(call env_or_default,CONTAINER_APP_NAME),chat-ui)
 WS_URI := $(if $(call env_or_default,WS_URI),$(call env_or_default,WS_URI),wss://your-backend-service.com/websocket)
-LOCATION := $(if $(call env_or_default,LOCATION),$(call env_or_default,LOCATION),eastus)
+UMI_NAME := $(if $(call env_or_default,UMI_NAME),$(call env_or_default,UMI_NAME),chat-ui-umi)
 
 # Full image reference
 ACR_IMAGE = $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(IMAGE_TAG)
@@ -43,6 +43,7 @@ help:
 	@echo "  login   - Login to Azure and ACR"
 	@echo "  init    - Create a new .env file from the sample template"
 	@echo "  show-config - Display current configuration values"
+	@echo "  show-umi - Show the managed identity used to access the registry"
 	@echo ""
 	@if [ -f .env ]; then \
 		echo "Configuration (using .env file plus any environment variable overrides):"; \
@@ -56,7 +57,7 @@ help:
 	@echo "  CONTAINER_APP_ENV=$(CONTAINER_APP_ENV)"
 	@echo "  CONTAINER_APP_NAME=$(CONTAINER_APP_NAME)"
 	@echo "  WS_URI=$(WS_URI)"
-	@echo "  LOCATION=$(LOCATION)"
+	@echo "  UMI_NAME=$(UMI_NAME)"
 
 # Show configuration values (useful for testing)
 .PHONY: show-config
@@ -68,7 +69,7 @@ show-config:
 	@echo "CONTAINER_APP_ENV=$(CONTAINER_APP_ENV)"
 	@echo "CONTAINER_APP_NAME=$(CONTAINER_APP_NAME)"
 	@echo "WS_URI=$(WS_URI)"
-	@echo "LOCATION=$(LOCATION)"
+	@echo "UMI_NAME=$(UMI_NAME)"
 
 # Build Docker image for AMD64 architecture (compatible with Azure)
 .PHONY: image
@@ -97,6 +98,14 @@ push:
 	docker push $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(IMAGE_TAG)
 	@echo "Image pushed: $(ACR_IMAGE)"
 
+# Get the managed identity for the websocket server
+UMI_ID_CMD := az identity show --name ${UMI_NAME} --resource-group ${RESOURCE_GROUP} --query id --output tsv
+UMI_ID := $$( ${UMI_ID_CMD} )
+
+.PHONY: show-umi
+show-umi:
+	@echo $$( ${UMI_ID_CMD})
+
 # Deploy to Azure Container App
 .PHONY: deploy
 deploy:
@@ -105,11 +114,10 @@ deploy:
 		--name $(CONTAINER_APP_NAME) \
 		--resource-group $(RESOURCE_GROUP) \
 		--environment $(CONTAINER_APP_ENV) \
-		--registry-server $(ACR_NAME).azurecr.io \
+		--registry-server $(ACR_NAME).azurecr.io  --registry-identity ${UMI_ID} \
 		--image $(ACR_IMAGE) \
 		--target-port 80 \
 		--ingress external \
-		--location $(LOCATION) \
 		--env-vars WS_URI=$(WS_URI)
 	@echo "Deployment completed for $(CONTAINER_APP_NAME)"
 	@echo "Access your application at: https://$(CONTAINER_APP_NAME).$(az containerapp env show --name $(CONTAINER_APP_ENV) --resource-group $(RESOURCE_GROUP) --query 'properties.defaultDomain' -o tsv)"
