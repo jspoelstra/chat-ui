@@ -100,6 +100,8 @@ npm run preview
 
 You can easily deploy this application using Docker. The project includes a complete Docker setup with Nginx for serving the frontend and proxying WebSocket connections.
 
+Refer to [DOCKER.md](DOCKER.md) for detailed instructions on using Docker for deployment.
+
 ### Quick Start with Docker
 
 > **Note**: We've simplified our Docker deployment approach! We now use direct Docker commands instead of Docker Compose for easier setup and maintenance. See [DOCKER_MIGRATION.md](DOCKER_MIGRATION.md) for details.
@@ -135,29 +137,59 @@ This application can be deployed to Azure Container Apps using the provided Make
 
 ### Quick Start with Azure
 
-1. Edit the Makefile to set your Azure environment variables:
+There are two ways to configure your deployment:
+
+#### Option 1: Using a .env file (recommended)
+
+1. Initialize a new .env file from the template:
+   ```bash
+   make init
+   ```
+
+2. Edit the .env file with your specific values:
+   ```bash
+   # Azure Container Registry configuration
+   ACR_NAME=youracr
+   RESOURCE_GROUP=yourresourcegroup
+   CONTAINER_APP_ENV=yourcontainerenv
+   
+   # Application configuration
+   CONTAINER_APP_NAME=chat-ui
+   IMAGE_NAME=chat-ui
+   IMAGE_TAG=latest
+   
+   # Application settings
+   WS_URI=wss://your-backend-service.com/websocket
+   
+   # Optional: Azure region
+   LOCATION=eastus
+   ```
+
+#### Option 2: Using environment variables or editing the Makefile
+
+1. Edit the Makefile directly or set environment variables when running commands:
    - `ACR_NAME`: Your Azure Container Registry name
    - `RESOURCE_GROUP`: Your Azure Resource Group
    - `CONTAINER_APP_ENV`: Your Container App Environment name
    - `WS_URI`: Your WebSocket backend URI
+   - `LOCATION`: Azure region for deployment
 
-2. Build and push the AMD64 image (suitable for Azure from ARM-based Macs):
+### Building and Deploying
 
-```bash
-make image push
-```
+1. Build and push the AMD64 image (suitable for Azure from ARM-based Macs):
+   ```bash
+   make image push
+   ```
 
-3. Deploy to Azure Container Apps:
+2. Deploy to Azure Container Apps:
+   ```bash
+   make deploy
+   ```
 
-```bash
-make deploy
-```
-
-4. Or do all steps at once:
-
-```bash
-make all-steps
-```
+3. Or do all steps at once:
+   ```bash
+   make all-steps
+   ```
 
 ### Testing Locally Before Deployment
 
@@ -178,7 +210,9 @@ The repository includes a GitHub Actions workflow for automated deployment to Az
 - `CONTAINER_APP_ENV`: Your Container App Environment name
 - `WS_URI`: Your WebSocket backend URI
 
-For detailed Azure deployment instructions, see [AZURE_DEPLOYMENT.md](AZURE_DEPLOYMENT.md).
+For detailed Azure deployment instructions, see [AZURE_DEPLOYMENT.md](AZURE_DEPLOYMENT.md). 
+
+For information about how the `.env` file system is implemented, see [ENV_FILE_INTEGRATION.md](ENV_FILE_INTEGRATION.md).
 
 ## 💻 Development
 

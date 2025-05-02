@@ -13,7 +13,39 @@ This guide explains how to deploy the Chat UI application to Azure Container App
 
 ## Configuration
 
-Before deployment, update the following variables in the Makefile or set them as environment variables:
+You have two options for configuration:
+
+### Option 1: Using a .env file (recommended)
+
+The easiest way to configure the deployment is using a `.env` file:
+
+1. Initialize a new `.env` file from the template:
+```bash
+make init
+```
+
+2. Edit the `.env` file with your specific values:
+```bash
+# Azure Container Registry configuration
+ACR_NAME=myacr
+RESOURCE_GROUP=myresourcegroup
+CONTAINER_APP_ENV=mycontainerenv
+
+# Application configuration
+CONTAINER_APP_NAME=chat-ui
+IMAGE_NAME=chat-ui
+IMAGE_TAG=latest
+
+# Application settings
+WS_URI=wss://your-backend-service.com/websocket
+
+# Optional: Azure region
+LOCATION=eastus
+```
+
+### Option 2: Setting Environment Variables
+
+Alternatively, you can set variables directly via environment variables when running the commands. Environment variables take precedence over values in the `.env` file:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -24,6 +56,12 @@ Before deployment, update the following variables in the Makefile or set them as
 | `WS_URI` | WebSocket URI for your backend service | wss://your-backend-service.com/websocket |
 | `IMAGE_NAME` | Name for your Docker image | chat-ui |
 | `IMAGE_TAG` | Tag for your Docker image | latest |
+| `LOCATION` | Azure region for deployment | eastus |
+
+The priority order for configuration values is:
+1. Command line environment variables (highest priority)
+2. Values from `.env` file (if it exists)
+3. Default values in the Makefile (lowest priority)
 
 ## Deployment Steps
 
@@ -75,20 +113,25 @@ The deployment configures the following environment variables:
 
 ## Customizing the Deployment
 
-### Custom Image Tag
+### Using Environment Variables with Make
 
-To use a specific image tag:
+You can override any configuration value from your `.env` file by setting environment variables, which take precedence:
 
 ```bash
+# Override just the image tag
 IMAGE_TAG=v1.0.0 make all-steps
-```
 
-### Custom WebSocket URI
+# Override multiple variables
+IMAGE_TAG=v1.0.0 WS_URI=wss://api.example.com/ws make deploy
 
-To specify a different WebSocket backend:
+# Specify a different Azure region
+LOCATION=westus2 make deploy
 
-```bash
-WS_URI=wss://api.example.com/ws make deploy
+# Check current configuration (helpful for debugging)
+make show-config
+
+# Check configuration with an override
+IMAGE_TAG=custom make show-config
 ```
 
 ## Troubleshooting

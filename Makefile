@@ -1,13 +1,27 @@
+# filepath: /Users/jacobspoelstra/git/chat-ui/Makefile
 # Makefile for Chat UI Container App deployment
 
-# Configuration variables (can be overridden via environment variables)
-IMAGE_NAME ?= chat-ui
-IMAGE_TAG ?= latest
-ACR_NAME ?= myacr  # Change to your Azure Container Registry name
-RESOURCE_GROUP ?= myresourcegroup  # Change to your resource group
-CONTAINER_APP_ENV ?= mycontainerenv  # Change to your Container App environment name
-CONTAINER_APP_NAME ?= chat-ui
-WS_URI ?= wss://your-backend-service.com/websocket  # Change to your WebSocket backend URL
+# Configuration variables with support for environment variables and .env file
+# Preferred order: 1. Command line environment variables, 2. .env file, 3. Default values
+
+# Check if .env file exists and if environment variable is not already set
+ifneq ($(wildcard .env),)
+  # Function to get value from .env file if environment variable is not set
+  env_or_default = $(if $(shell printenv $(1)),$(shell printenv $(1)),$(shell grep -E "^$(1)=" .env 2>/dev/null | cut -d= -f2-))
+else
+  # If no .env file, just use environment variable or empty string
+  env_or_default = $(shell printenv $(1))
+endif
+
+# Set final values with defaults if neither environment nor .env provide them
+IMAGE_NAME := $(if $(call env_or_default,IMAGE_NAME),$(call env_or_default,IMAGE_NAME),chat-ui)
+IMAGE_TAG := $(if $(call env_or_default,IMAGE_TAG),$(call env_or_default,IMAGE_TAG),latest)
+ACR_NAME := $(if $(call env_or_default,ACR_NAME),$(call env_or_default,ACR_NAME),myacr)
+RESOURCE_GROUP := $(if $(call env_or_default,RESOURCE_GROUP),$(call env_or_default,RESOURCE_GROUP),myresourcegroup)
+CONTAINER_APP_ENV := $(if $(call env_or_default,CONTAINER_APP_ENV),$(call env_or_default,CONTAINER_APP_ENV),mycontainerenv)
+CONTAINER_APP_NAME := $(if $(call env_or_default,CONTAINER_APP_NAME),$(call env_or_default,CONTAINER_APP_NAME),chat-ui)
+WS_URI := $(if $(call env_or_default,WS_URI),$(call env_or_default,WS_URI),wss://your-backend-service.com/websocket)
+LOCATION := $(if $(call env_or_default,LOCATION),$(call env_or_default,LOCATION),eastus)
 
 # Full image reference
 ACR_IMAGE = $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(IMAGE_TAG)
@@ -27,8 +41,14 @@ help:
 	@echo "  deploy  - Deploy to Azure Container App"
 	@echo "  clean   - Remove local Docker images"
 	@echo "  login   - Login to Azure and ACR"
+	@echo "  init    - Create a new .env file from the sample template"
+	@echo "  show-config - Display current configuration values"
 	@echo ""
-	@echo "Configuration (set via environment variables):"
+	@if [ -f .env ]; then \
+		echo "Configuration (using .env file plus any environment variable overrides):"; \
+	else \
+		echo "Configuration (using environment variables or defaults):"; \
+	fi
 	@echo "  IMAGE_NAME=$(IMAGE_NAME)"
 	@echo "  IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "  ACR_NAME=$(ACR_NAME)"
@@ -36,6 +56,19 @@ help:
 	@echo "  CONTAINER_APP_ENV=$(CONTAINER_APP_ENV)"
 	@echo "  CONTAINER_APP_NAME=$(CONTAINER_APP_NAME)"
 	@echo "  WS_URI=$(WS_URI)"
+	@echo "  LOCATION=$(LOCATION)"
+
+# Show configuration values (useful for testing)
+.PHONY: show-config
+show-config:
+	@echo "IMAGE_NAME=$(IMAGE_NAME)"
+	@echo "IMAGE_TAG=$(IMAGE_TAG)"
+	@echo "ACR_NAME=$(ACR_NAME)"
+	@echo "RESOURCE_GROUP=$(RESOURCE_GROUP)"
+	@echo "CONTAINER_APP_ENV=$(CONTAINER_APP_ENV)"
+	@echo "CONTAINER_APP_NAME=$(CONTAINER_APP_NAME)"
+	@echo "WS_URI=$(WS_URI)"
+	@echo "LOCATION=$(LOCATION)"
 
 # Build Docker image for AMD64 architecture (compatible with Azure)
 .PHONY: image
@@ -76,6 +109,7 @@ deploy:
 		--image $(ACR_IMAGE) \
 		--target-port 80 \
 		--ingress external \
+		--location $(LOCATION) \
 		--env-vars WS_URI=$(WS_URI)
 	@echo "Deployment completed for $(CONTAINER_APP_NAME)"
 	@echo "Access your application at: https://$(CONTAINER_APP_NAME).$(az containerapp env show --name $(CONTAINER_APP_ENV) --resource-group $(RESOURCE_GROUP) --query 'properties.defaultDomain' -o tsv)"
@@ -93,3 +127,15 @@ clean:
 .PHONY: all-steps
 all-steps: login image push deploy
 	@echo "Build, push, and deploy completed successfully!"
+
+# Initialize .env file from sample template
+.PHONY: init
+init:
+	@if [ -f .env ]; then \
+		echo "Warning: .env file already exists"; \
+		echo "To create a new one, remove or rename the existing .env file first"; \
+	else \
+		cp -v .env.sample .env; \
+		echo "Created .env file from template. Edit it with your specific configuration."; \
+		echo "Then use 'make' commands to build, push, and deploy."; \
+	fi
