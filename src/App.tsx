@@ -5,12 +5,12 @@ import MessageInput from './components/MessageInput';
 import DebugPanel from './components/DebugPanel';
 import SettingsPanel from './components/SettingsPanel';
 import { BotSystemMsg, BotMessageTypes, BotMsg, BotRequestMsg } from './types/protocol';
+import { getWebSocketUri } from './config';
 import './App.css';
 
 function App() {
-  // Changed from ws://localhost:501/chat to ws://localhost:501
-  // The hook will append the correct endpoint (/chat or /system)
-  const [wsUri, setWsUri] = useState('ws://localhost:501');
+  // Using the WebSocket URI from the configuration
+  const [wsUri, setWsUri] = useState(getWebSocketUri());
   const [userId, setUserId] = useState<string | null>("anonymous");
   const [showSettings, setShowSettings] = useState(false);
   const [reconnectTrigger, setReconnectTrigger] = useState(0);

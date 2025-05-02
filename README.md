@@ -8,6 +8,8 @@ A modern, TypeScript-based chat interface built with React and Vite that provide
 - [Tech Stack](#tech-stack)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Docker Deployment](#docker-deployment)
+- [Azure Container Apps Deployment](#azure-container-apps-deployment)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
@@ -19,6 +21,23 @@ A modern, TypeScript-based chat interface built with React and Vite that provide
 - TypeScript for type safety
 - Debug panel for development
 - Customizable settings
+
+## 🔌 WebSocket Connection
+
+This application connects directly to WebSocket servers for real-time communication. Key points:
+
+- WebSocket connections are made directly from the browser to the backend server
+- By default connects to `ws://localhost:501` but this can be configured
+- Supports both `ws://` and secure `wss://` protocols
+- Connection endpoints include `/chat` and `/system`
+- No proxy is required for WebSocket connections
+
+### WebSocket Configuration
+
+The WebSocket URI can be configured in multiple ways:
+- During development: Edit `src/config.ts` defaults
+- At build time: Set environment variables during Docker build
+- At runtime: Set the `WS_URI` environment variable when running the container
 
 ## 🛠️ Tech Stack
 
@@ -76,6 +95,90 @@ To preview the production build locally:
 ```bash
 npm run preview
 ```
+
+## 🐳 Docker Deployment
+
+You can easily deploy this application using Docker. The project includes a complete Docker setup with Nginx for serving the frontend and proxying WebSocket connections.
+
+### Quick Start with Docker
+
+> **Note**: We've simplified our Docker deployment approach! We now use direct Docker commands instead of Docker Compose for easier setup and maintenance. See [DOCKER_MIGRATION.md](DOCKER_MIGRATION.md) for details.
+
+1. Use the provided script (recommended):
+
+```bash
+./docker-run.sh
+```
+
+2. Or build and run manually:
+
+```bash
+docker build -t chat-ui:latest .
+docker run -d --name chat-ui -p 8080:80 -e WS_URI=ws://your-backend-server chat-ui:latest
+```
+
+3. Access the application at `http://localhost:8080`
+
+### Environment Variables
+
+Configure the application using environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| WS_URI | WebSocket server URI | ws://localhost:501 |
+
+For detailed Docker deployment instructions, see [DOCKER.md](DOCKER.md).
+
+## ☁️ Azure Container Apps Deployment
+
+This application can be deployed to Azure Container Apps using the provided Makefile and deployment scripts.
+
+### Quick Start with Azure
+
+1. Edit the Makefile to set your Azure environment variables:
+   - `ACR_NAME`: Your Azure Container Registry name
+   - `RESOURCE_GROUP`: Your Azure Resource Group
+   - `CONTAINER_APP_ENV`: Your Container App Environment name
+   - `WS_URI`: Your WebSocket backend URI
+
+2. Build and push the AMD64 image (suitable for Azure from ARM-based Macs):
+
+```bash
+make image push
+```
+
+3. Deploy to Azure Container Apps:
+
+```bash
+make deploy
+```
+
+4. Or do all steps at once:
+
+```bash
+make all-steps
+```
+
+### Testing Locally Before Deployment
+
+You can test your container locally with Azure-like environment variables:
+
+```bash
+./test-azure-container.sh
+```
+
+### CI/CD with GitHub Actions
+
+The repository includes a GitHub Actions workflow for automated deployment to Azure Container Apps. Configure the required secrets in your GitHub repository:
+
+- `AZURE_CREDENTIALS`: Azure service principal credentials
+- `ACR_NAME`: Your Azure Container Registry name
+- `ACR_USERNAME` and `ACR_PASSWORD`: ACR credentials
+- `RESOURCE_GROUP`: Your Azure Resource Group
+- `CONTAINER_APP_ENV`: Your Container App Environment name
+- `WS_URI`: Your WebSocket backend URI
+
+For detailed Azure deployment instructions, see [AZURE_DEPLOYMENT.md](AZURE_DEPLOYMENT.md).
 
 ## 💻 Development
 

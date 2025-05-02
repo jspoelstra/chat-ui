@@ -1,0 +1,90 @@
+name: Build and Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Image tag to use'
+        required: true
+        default: 'latest'
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+  CONTAINER_APP_ENV: ${{ secrets.CONTAINER_APP_ENV }}
+  CONTAINER_APP_NAME: ${{ secrets.CONTAINER_APP_NAME || 'chat-ui' }}
+  WS_URI: ${{ secrets.WS_URI }}
+  IMAGE_NAME: chat-ui
+  IMAGE_TAG: ${{ github.event.inputs.imageTag || github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Azure Container App
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az containerapp update \
+              --name ${{ env.CONTAINER_APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+              --set-env-vars WS_URI=${{ env.WS_URI }}
+            
+            # If the container app doesn't exist yet, create it
+            if [ $? -ne 0 ]; then
+              echo "Container app doesn't exist, creating it..."
+              az containerapp create \
+                --name ${{ env.CONTAINER_APP_NAME }} \
+                --resource-group ${{ env.RESOURCE_GROUP }} \
+                --environment ${{ env.CONTAINER_APP_ENV }} \
+                --registry-server ${{ env.ACR_NAME }}.azurecr.io \
+                --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+                --target-port 80 \
+                --ingress external \
+                --env-vars WS_URI=${{ env.WS_URI }}
+            fi
+
+      - name: Get Container App URL
+        id: get-url
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            URL=$(az containerapp show --name ${{ env.CONTAINER_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+            echo "::set-output name=url::https://$URL"
+
+      - name: Print Deployment URL
+        run: |
+          echo "Deployed to ${{ steps.get-url.outputs.url }}"
